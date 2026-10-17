@@ -31,7 +31,7 @@ def main():
     assets = set()
     def replace(match):
         decoded = base64.b64decode(match["data"]).decode("utf-8")
-        assets.update(s.removeprefix(OLD) for s in PATTERN.findall(decoded))
+        assets.update(s.removeprefix(OLD).removeprefix("Portfolio/") for s in PATTERN.findall(decoded))
         if OLD + "hero-silk.webp" in decoded:
             assets.add("hero-silk.webp")
         decoded = decoded.replace(OLD, "./")
@@ -48,6 +48,9 @@ def main():
             sys.exit("Unsafe path")
         target = OUT / path
         target.parent.mkdir(parents=True, exist_ok=True)
+        if target.is_file() and target.stat().st_size > 100:
+            print(f"[{i}/{len(assets)}] CACHED {path}")
+            continue
         try:
             image = download(OLD + path)
             if len(image) < 100 or image[:50].lstrip().lower().startswith(b"<!doctype"):
